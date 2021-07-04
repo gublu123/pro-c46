@@ -2,118 +2,125 @@ const Engine = Matter.Engine;
 const World= Matter.World;
 const Bodies = Matter.Bodies;
 const Constraint = Matter.Constraint;
-
 var engine, world;
-var box1, pig1,pig3;
-var backgroundImg,platform;
-var bird, slingshot;
-
-var gameState = "onSling";
-var bg = "sprites/bg1.png";
-var score = 0;
-
-function preload() {
-    getBackgroundImg();
+var ground, arrowboardImg1, arrowboardImg2;
+var targetImg;
+var arrow1
+var count=0;
+var score1 = 0;
+var score2 = 0;
+var a=0;
+function preload(){
+    targetImg=loadImage("arrow board 1.png")
 }
 
 function setup(){
-    var canvas = createCanvas(1200,400);
+    var canvas = createCanvas(displayWidth, displayHeight - 100);
     engine = Engine.create();
     world = engine.world;
 
+    ground = new Ground(width/2, height-50, width, 50);
 
-    ground = new Ground(600,height,1200,20);
-    platform = new Ground(150, 305, 300, 170);
 
-    box1 = new Box(700,320,70,70);
-    box2 = new Box(920,320,70,70);
-    pig1 = new Pig(810, 350);
-    log1 = new Log(810,260,300, PI/2);
+    arrow1=new Arrow(250,height-250);
+    arrow2=new Arrow(width-250,height-250);
 
-    box3 = new Box(700,240,70,70);
-    box4 = new Box(920,240,70,70);
-    pig3 = new Pig(810, 220);
-
-    log3 =  new Log(810,180,300, PI/2);
-
-    box5 = new Box(810,160,70,70);
-    log4 = new Log(760,120,150, PI/7);
-    log5 = new Log(870,120,150, -PI/7);
-
-    bird = new Bird(200,50);
-
-    //log6 = new Log(230,180,80, PI/2);
-    slingshot = new SlingShot(bird.body,{x:200, y:50});
+    slingshot1 = new SlingShot(arrow1.body, {x:250, y:height-250})
+    slingshot2 = new SlingShot(arrow2.body, {x:width-250, y:height-250})
 }
 
 function draw(){
-    if(backgroundImg)
-        background(backgroundImg);
-    
-        noStroke();
-        textSize(35)
-        fill("white")
-        text("Score  " + score, width-300, 50)
-    
+    background("grey");
     Engine.update(engine);
-    //strokeWeight(4);
-    box1.display();
-    box2.display();
+    fill(0);
+    imageMode(CENTER);
+    //target1
+    image(targetImg,250,200,width/5,width/5)
+    //target2
+    image(targetImg,width-250, 200, width/5,width/5)
     ground.display();
-    pig1.display();
-    pig1.score();
-    log1.display();
+    
+   console.log(score1);
 
-    box3.display();
-    box4.display();
-    pig3.display();
-    pig3.score();
-    log3.display();
+   /*if(a<10&&a>5)
+   {
+       console.log("Hi");
+   }
+   else{
+       console.log("Hello");
+   }*/
+    
+    //if(a==0){
+    
+    
+    if(count%2==0){
+        text("PLAYER 1 SHOOT",500,100); 
+    }
+//}
+    detectCollision(arrow1);
+    detectCollision(arrow2);
 
-    box5.display();
-    log4.display();
-    log5.display();
+    text (score1,250,20);
+    text(arrow1.body.position.y,500,300);
 
-    bird.display();
-    platform.display();
-    //log6.display();
-    slingshot.display();    
+    arrow1.display();
+    arrow2.display();
+    slingshot1.display();
+    slingshot2.display();
+    
+    console.log(arrow1.body.position.y);
+    console.log(arrow1.body.position.x);
+
+    score();   
 }
 
 function mouseDragged(){
-    //if (gameState!=="launched"){
-        Matter.Body.setPosition(bird.body, {x: mouseX , y: mouseY});
-    //}
+    if(count%2==0){
+        Matter.Body.setPosition(arrow1.body,{x:mouseX,y:mouseY});
+    }
+    else
+        Matter.Body.setPosition(arrow2.body,{x:mouseX,y:mouseY})
+        a = 0;
 }
 
 
 function mouseReleased(){
-    slingshot.fly();
-    gameState = "launched";
-}
-
-function keyPressed(){
-    if(keyCode === 32 && bird.speed < 1){
-       bird.trajectory = [];
-       Matter.Body.setPosition(bird.body, {x: 200 , y: 50});
-        slingshot.attach(bird.body);
+    if(count%2==0){
+       slingshot1.fly();  
+       count++;
     }
-}
-
-async function getBackgroundImg(){
-    var response = await fetch("http://worldtimeapi.org/api/timezone/Asia/Kolkata");
-    var responseJSON = await response.json();
-
-    var datetime = responseJSON.datetime;
-    var hour = datetime.slice(11,13);
+    else{ 
+       slingshot2.fly(); 
+       count++;
+    }
     
-    if(hour>=0600 && hour<=1900){
-        bg = "sprites/bg1.png";
-    }
-    else{
-        bg = "sprites/bg2.jpg";
-    }
+}
 
-    backgroundImg = loadImage(bg);
-    console.log(backgroundImg);
+function detectCollision(arrow){
+	if(arrow.body.position.y<=arrow.height/2+width/5){
+	   Matter.Body.setStatic(arrow.body,true);
+       console.log("touching");
+       a = 1;
+	}
+}
+   
+function score(){
+    if((arrow1.body.position.y<370 && arrow1.body.position.y>=325) && arrow1.body.velocity.y<1 && a === 0){
+        score1=score1+2;
+        console.log(score1);
+    }
+    if((arrow1.body.position.y<325 && arrow1.body.position.y>=290) && arrow1.body.velocity.y<1 && a === 0){
+        score1=score1+3;
+        console.log(score1);
+       
+    }
+    if((arrow1.body.position.y<260 && arrow1.body.position.y>=230) && arrow1.body.velocity.y<1 && a === 0){
+        score1=score1+5;
+        console.log(score1);
+       
+    }
+    if((arrow1.body.position.y<230 && arrow1.body.position.y>=170) && arrow1.body.velocity.y<1 && a === 0){
+        score1=score1+10;
+        console.log(score1);
+    }
 }
